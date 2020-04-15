@@ -5,6 +5,7 @@ Classes we plan to use : <br>
 ['up', 'three', 'four', 'stop', 'left', 'on',  'six', 'right', 'go', 'seven', 'no', 'one', 'off', 'yes', 'nine', 'zero', 'two',  'down', 'five', 'eight']
 <br>
 To implement :
-<li> Spectrogram input based VGGNet & ResNet  <li>asd</li></li>
-<li> Spectrogram input based LRP - Explainable AI </li>
+<li> Using transfer learning on end-to-end ASR</li>
+<li> Spectrogram input based VGGNet & ResNet with/without transfer learning </li>
+<li> Spectrogram input based LRP/RDE using iNNvestigate - Explainable AI </li>
 

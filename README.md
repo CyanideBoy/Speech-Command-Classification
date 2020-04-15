@@ -5,7 +5,8 @@ Classes we plan to use : <br>
 ['up', 'three', 'four', 'stop', 'left', 'on',  'six', 'right', 'go', 'seven', 'no', 'one', 'off', 'yes', 'nine', 'zero', 'two',  'down', 'five', 'eight']
 <br><br>
 <h2>To implement :</h2>
+<li> Data Augmentation </li>
 <li> Using transfer learning on end-to-end ASR</li>
 <li> Spectrogram input based VGGNet & ResNet with/without transfer learning </li>
 <li> Spectrogram input based LRP/RDE using iNNvestigate - Explainable AI </li>
-
+<li> Robustness to noise </li>

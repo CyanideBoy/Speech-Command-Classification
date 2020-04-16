@@ -10,12 +10,17 @@ from sklearn.metrics import confusion_matrix
 import seaborn as sn
 import pandas as pd
 from keras.utils.np_utils import to_categorical 
+from keras.optimizers import Adam
+from keras.models import Sequential
+from keras.layers import Dense
+from keras.callbacks import EarlyStopping, ModelCheckpoint
+from keras import backend as K
 
 
 def load_data(labels=['up', 'three', 'four', 'stop', 'left', 'on', 'six', 'right', 'go',
                     'seven', 'no', 'one', 'off', 'yes', 'nine', 'zero', 'two', 'down', 'five', 'eight'],
                 SAMPLES = 8000, TEST_SPLIT = 0.2, VAL_SPLIT = 0.2):
-    global ohe
+
     drive.mount('/content/drive')
 
     dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -68,17 +73,17 @@ def load_data(labels=['up', 'three', 'four', 'stop', 'left', 'on', 'six', 'right
     print("Train Set X shape %s" % (x_train.shape,))
     print("Train Set Y shape %s" % (y_train.shape,))
     
-    return x_train,y_train,x_val,y_val,x_test,y_test
+    return x_train,y_train,x_val,y_val,x_test,y_test, labels, ohe, DATA_PATH
 
 
-def plot(fit_hist, size = (15,8)):
+def plot_graph(fit_hist, size = (15,8)):
 
 
     plt.figure(1, figsize = size) 
         
     plt.subplot(221)  
-    plt.plot(fit_hist.history['accuracy'])  
-    plt.plot(fit_hist.history['val_accuracy'])  
+    plt.plot(fit_hist.history['acc'])  
+    plt.plot(fit_hist.history['val_acc'])  
     plt.title('model accuracy')  
     plt.ylabel('accuracy')  
     plt.xlabel('epoch')  
@@ -97,11 +102,45 @@ def plot(fit_hist, size = (15,8)):
     plt.show()
 
 
-def conf_matrix(y_pred,y_test,labels):
-    global ohe
+def plot_confusion_matrix(y_pred,y_test,labels, ohe,size=(10,7)):
+
+    N = len(labels)
     matrix = confusion_matrix(y_test.argmax(axis=1), y_pred.argmax(axis=1))
 
-    df_cm = pd.DataFrame(matrix, index = [ohe.inverse_transform(to_categorical(i, num_classes=20).reshape(1,-1))[0,0] for i in range(len(labels))],
-                    columns = [ohe.inverse_transform(to_categorical(i, num_classes=20).reshape(1,-1))[0,0] for i in range(len(labels))])
-    plt.figure(figsize = (10,7))
+    df_cm = pd.DataFrame(matrix, index = [ohe.inverse_transform(to_categorical(i, num_classes= N).reshape(1,-1))[0,0] for i in range(N)],
+                    columns = [ohe.inverse_transform(to_categorical(i, num_classes=N).reshape(1,-1))[0,0] for i in range(N)])
+    plt.figure(figsize = size)
     sn.heatmap(df_cm, annot=True,cmap='GnBu')
+
+
+def model_maker(x_train,y_train,x_val,y_val,layers_info, DATAPATH, NUM_EPOCHS, BATCH_SIZE, EARLY_STOP_PATIENCE):
+    K.clear_session()
+
+    model = Sequential()
+    
+    for layer_ in layers_info:
+        print("__--__")
+        print(layer_[0])
+        print(layer_[1])
+        model.add(layer_[0](**layer_[1]))
+
+    adm = Adam(lr=0.001, beta_1=0.9, beta_2=0.999, amsgrad=False)
+
+    model.compile(loss='categorical_crossentropy', optimizer= adm , metrics=['acc'])
+    model.summary()
+
+    name = DATAPATH + "model_weights/LR-weights.{epoch:02d}-{val_loss:.3f}.hdf5"
+    early_stopper = EarlyStopping(monitor = 'val_acc', patience = EARLY_STOP_PATIENCE)
+    checkpointer = ModelCheckpoint(filepath = name, monitor = 'val_acc', save_best_only = True, mode = 'auto')
+
+    cbk = [checkpointer, early_stopper]
+
+    fit_hist = model.fit(x = x_train, 
+          y = y_train,
+          batch_size = BATCH_SIZE,
+          epochs = NUM_EPOCHS,
+          verbose = 1,
+          validation_data=(x_val,y_val),
+          callbacks=cbk)
+
+    return model,fit_hist
